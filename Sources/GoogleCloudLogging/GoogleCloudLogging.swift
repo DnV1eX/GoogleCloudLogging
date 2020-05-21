@@ -174,8 +174,8 @@ class GoogleCloudLogging {
             
             static func global(projectId: String) -> MonitoredResource { MonitoredResource(type: "global", labels: ["project_id": projectId]) }
         }
-        struct Entry: Encodable {
-            enum Severity: String, Encodable {
+        struct Entry: Codable {
+            enum Severity: String, Codable {
                 case `default` = "DEFAULT"
                 case debug = "DEBUG"
                 case info = "INFO"
@@ -186,7 +186,7 @@ class GoogleCloudLogging {
                 case alert = "ALERT"
                 case emergency = "EMERGENCY"
             }
-            struct SourceLocation: Encodable {
+            struct SourceLocation: Codable {
                 let file: String
                 let line: String
                 let function: String
@@ -215,7 +215,7 @@ class GoogleCloudLogging {
     let session: URLSession
 
     
-    init(serviceAccountCredentialsURL url: URL) throws {
+    init(serviceAccountCredentials url: URL) throws {
         
         let data = try Data(contentsOf: url)
         let credentials = try JSONDecoder().decode(Credentials.self, from: data)
