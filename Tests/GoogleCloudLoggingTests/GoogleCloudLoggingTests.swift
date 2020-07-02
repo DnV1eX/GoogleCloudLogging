@@ -10,7 +10,7 @@ final class GoogleCloudLoggingTests: XCTestCase {
     
     override class func setUp() {
         
-        try! GoogleCloudLogHandler.setup(serviceAccountCredentials: url)
+        try! GoogleCloudLogHandler.setup(serviceAccountCredentials: url, clientId: UUID())
         LoggingSystem.bootstrap(GoogleCloudLogHandler.init)
     }
     
@@ -34,9 +34,9 @@ final class GoogleCloudLoggingTests: XCTestCase {
         let gcl = try! GoogleCloudLogging(serviceAccountCredentials: Self.url)
         let dg = DispatchGroup()
         dg.enter()
-        let e1 = GoogleCloudLogging.Log.Entry(logName: GoogleCloudLogging.Log.name(projectId: gcl.serviceAccountCredentials.projectId, logId: "Test1"), timestamp: nil, severity: nil, labels: nil, sourceLocation: nil, textPayload: "Message 1")
-        let e2 = GoogleCloudLogging.Log.Entry(logName: GoogleCloudLogging.Log.name(projectId: gcl.serviceAccountCredentials.projectId, logId: "Test2"), timestamp: Date(), severity: .default, labels: [:], sourceLocation: nil, textPayload: "Message 2")
-        let e3 = GoogleCloudLogging.Log.Entry(logName: GoogleCloudLogging.Log.name(projectId: gcl.serviceAccountCredentials.projectId, logId: "Test3"), timestamp: Date() - 10, severity: .emergency, labels: ["a": "A", "b": "B"], sourceLocation: .init(file: #file, line: String(#line), function: #function), textPayload: "Message 3")
+        let e1 = GoogleCloudLogging.Log.Entry(logName: "", timestamp: nil, severity: nil, insertId: nil, labels: nil, sourceLocation: nil, textPayload: "Message 1")
+        let e2 = GoogleCloudLogging.Log.Entry(logName: " Test-2\n.", timestamp: Date(), severity: .default, insertId: nil, labels: [:], sourceLocation: nil, textPayload: " Message\n2 👌")
+        let e3 = GoogleCloudLogging.Log.Entry(logName: "/Test_3", timestamp: Date() - 10, severity: .emergency, insertId: "ttt", labels: ["a": "A", "b": "B"], sourceLocation: .init(file: #file, line: String(#line), function: #function), textPayload: "Message 3")
         gcl.write(entries: [e1, e2, e3]) { result in
             if case .failure = result { XCTFail() }
             print(result)
@@ -63,12 +63,39 @@ final class GoogleCloudLoggingTests: XCTestCase {
     }
     
     
+    func testDictionaryUpdate() {
+        
+        var dictionary = ["a": 1, "b": 2]
+        
+        XCTAssertEqual(dictionary.update(with: [:]), [:])
+        XCTAssertEqual(dictionary, ["a": 1, "b": 2])
+        
+        XCTAssertEqual(dictionary.update(with: ["c": 3, "b": 2]), ["b": 2])
+        XCTAssertEqual(dictionary, ["a": 1, "b": 2, "c": 3])
+        
+        XCTAssertEqual(dictionary.update(with: ["a": 0]), ["a": 1])
+        XCTAssertEqual(dictionary, ["a": 0, "b": 2, "c": 3])
+        
+        XCTAssertEqual(dictionary.update(with: ["d": 1, "e": 0]), [:])
+        XCTAssertEqual(dictionary, ["a": 0, "b": 2, "c": 3, "d": 1, "e": 0])
+    }
+    
+    
+    func testSafeLogId() {
+        
+        XCTAssertEqual("My_class-1.swift".safeLogId(), "My_class-1.swift")
+        XCTAssertEqual(" Mÿ@Cláss!✌️/ ".safeLogId(), "_MyClass_")
+        XCTAssertEqual("Мой еёжз класс".safeLogId(), "Moj_eezz_klass")
+        XCTAssertEqual("".safeLogId(), "_")
+    }
+    
+    
     func testGoogleCloudLogHandler() {
         
         var logger = Logger(label: "GoogleCloudLoggingTests")
         logger[metadataKey: "LoggerMetadataKey"] = "LoggerMetadataValue"
         logger.critical("LoggerMessage", metadata: ["MessageMetadataKey": "MessageMetadataValue"])
-        sleep(3)
+        Thread.sleep(forTimeInterval: 3)
     }
     
     
@@ -76,6 +103,8 @@ final class GoogleCloudLoggingTests: XCTestCase {
         ("testTokenRequest", testTokenRequest),
         ("testEntriesWrite", testEntriesWrite),
         ("testLogHandler", testLogHandler),
+        ("testDictionaryUpdate", testDictionaryUpdate),
+        ("testSafeLogId", testSafeLogId),
         ("testGoogleCloudLogHandler", testGoogleCloudLogHandler),
     ]
 }

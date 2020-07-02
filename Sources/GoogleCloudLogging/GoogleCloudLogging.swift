@@ -191,9 +191,10 @@ class GoogleCloudLogging {
                 let line: String
                 let function: String
             }
-            let logName: String
+            var logName: String
             let timestamp: Date?
             let severity: Severity?
+            let insertId: String?
             let labels: [String: String]?
             let sourceLocation: SourceLocation?
             let textPayload: String
@@ -201,7 +202,7 @@ class GoogleCloudLogging {
         let resource: MonitoredResource
         let entries: [Entry]
         
-        static func name(projectId: String, logId: String) -> String { "projects/\(projectId)/logs/\(logId)" }
+        static func name(projectId: String, logId: String) -> String { "projects/\(projectId)/logs/\(logId.safeLogId())" }
     }
     
     
@@ -308,6 +309,11 @@ class GoogleCloudLogging {
             do {
                 let encoder = JSONEncoder()
                 encoder.dateEncodingStrategy = .iso8601WithFractionalSeconds
+                let entries: [Log.Entry] = entries.map {
+                    var entry = $0
+                    entry.logName = Log.name(projectId: self.serviceAccountCredentials.projectId, logId: $0.logName)
+                    return entry
+                }
                 request.httpBody = try encoder.encode(Log(resource: .global(projectId: self.serviceAccountCredentials.projectId), entries: entries))
             } catch {
                 completionHandler(.failure(error))
@@ -343,6 +349,37 @@ extension JSONEncoder.DateEncodingStrategy {
         dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         var container = encoder.singleValueContainer()
         try container.encode(dateFormatter.string(from: date))
+    }
+}
+
+
+
+extension CharacterSet {
+    
+    static let asciiDigits = CharacterSet(charactersIn: "0"..."9")
+    
+    static let uppercaseLatinAlphabet = CharacterSet(charactersIn: "A"..."Z")
+    
+    static let lowercaseLatinAlphabet = CharacterSet(charactersIn: "a"..."z")
+    
+    static let logIdSymbols = CharacterSet(charactersIn: "-._")
+        .union(.asciiDigits)
+        .union(.uppercaseLatinAlphabet)
+        .union(.lowercaseLatinAlphabet)
+}
+
+
+
+extension String {
+    
+    func safeLogId() -> String {
+        let logId = String((applyingTransform(.toLatin, reverse: false) ?? self)
+            .folding(options: [.diacriticInsensitive, .widthInsensitive], locale: .init(identifier: "en_US"))
+            .replacingOccurrences(of: " ", with: "_")
+            .unicodeScalars
+            .filter(CharacterSet.logIdSymbols.contains)
+            .prefix(511))
+        return logId.isEmpty ? "_" : logId
     }
 }
 
