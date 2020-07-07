@@ -308,7 +308,7 @@ class GoogleCloudLogging {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             do {
                 let encoder = JSONEncoder()
-                encoder.dateEncodingStrategy = .iso8601WithFractionalSeconds
+                encoder.dateEncodingStrategy = .iso8601WithNanoseconds
                 let entries: [Log.Entry] = entries.map {
                     var entry = $0
                     entry.logName = Log.name(projectId: self.serviceAccountCredentials.projectId, logId: $0.logName)
@@ -342,13 +342,25 @@ extension Data {
 
 
 
+extension ISO8601DateFormatter {
+    
+    static func internetDateTimeWithNanosecondsString(from date: Date, timeZone: TimeZone = TimeZone(secondsFromGMT: 0)!) -> String {
+        var string = ISO8601DateFormatter.string(from: date, timeZone: timeZone, formatOptions: .withInternetDateTime)
+        var timeInterval = date.timeIntervalSinceReferenceDate
+        if timeInterval < 0 {
+            timeInterval += (-timeInterval * 2).rounded(.up)
+        }
+        string.insert(contentsOf: "\(timeInterval)".drop { $0 != "." }.prefix(10), at: string.index(string.startIndex, offsetBy: 19))
+        return string
+    }
+}
+
+
 extension JSONEncoder.DateEncodingStrategy {
     
-    static let iso8601WithFractionalSeconds = custom { date, encoder in
-        let dateFormatter = ISO8601DateFormatter()
-        dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    static let iso8601WithNanoseconds = custom { date, encoder in
         var container = encoder.singleValueContainer()
-        try container.encode(dateFormatter.string(from: date))
+        try container.encode(ISO8601DateFormatter.internetDateTimeWithNanosecondsString(from: date))
     }
 }
 
@@ -367,7 +379,6 @@ extension CharacterSet {
         .union(.uppercaseLatinAlphabet)
         .union(.lowercaseLatinAlphabet)
 }
-
 
 
 extension String {

@@ -81,6 +81,16 @@ final class GoogleCloudLoggingTests: XCTestCase {
     }
     
     
+    func testISO8601DateFormatterNanoseconds() {
+        
+        XCTAssertEqual(ISO8601DateFormatter.internetDateTimeWithNanosecondsString(from: Date(timeIntervalSinceReferenceDate: 615695580)), "2020-07-06T02:33:00.0Z")
+        XCTAssertEqual(ISO8601DateFormatter.internetDateTimeWithNanosecondsString(from: Date(timeIntervalSinceReferenceDate: 615695580.235942)), "2020-07-06T02:33:00.235942Z")
+        XCTAssertEqual(ISO8601DateFormatter.internetDateTimeWithNanosecondsString(from: Date(timeIntervalSinceReferenceDate: 615695580.987654321)), "2020-07-06T02:33:00.9876543Z")
+        XCTAssertEqual(ISO8601DateFormatter.internetDateTimeWithNanosecondsString(from: Date(timeIntervalSinceReferenceDate: 0.987654321)), "2001-01-01T00:00:00.987654321Z")
+        XCTAssertEqual(ISO8601DateFormatter.internetDateTimeWithNanosecondsString(from: Date(timeIntervalSinceReferenceDate: -0.9876543211)), "2000-12-31T23:59:59.012345678Z")
+    }
+    
+    
     func testSafeLogId() {
         
         XCTAssertEqual("My_class-1.swift".safeLogId(), "My_class-1.swift")
@@ -97,14 +107,4 @@ final class GoogleCloudLoggingTests: XCTestCase {
         logger.critical("LoggerMessage", metadata: ["MessageMetadataKey": "MessageMetadataValue"])
         Thread.sleep(forTimeInterval: 3)
     }
-    
-    
-    static var allTests = [
-        ("testTokenRequest", testTokenRequest),
-        ("testEntriesWrite", testEntriesWrite),
-        ("testLogHandler", testLogHandler),
-        ("testDictionaryUpdate", testDictionaryUpdate),
-        ("testSafeLogId", testSafeLogId),
-        ("testGoogleCloudLogHandler", testGoogleCloudLogHandler),
-    ]
 }

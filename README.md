@@ -1,9 +1,11 @@
 # GoogleCloudLogging
 
-Event logging for client applications on [Apple platforms](#supported-platforms) with support for offline work and automatic upload to [Google Cloud (GCP)](https://cloud.google.com). The package depends on [SwiftLog](https://github.com/apple/swift-log) - an official logging API for Swift, so it can be easly integrated into the project and combined with other logging backends. Log events are stored locally in the [JSON Lines](http://jsonlines.org) file format and bulk uploaded to GCP using the [Cloud Logging API v2](https://cloud.google.com/logging/docs/reference/v2/rest) at time intervals, upon defined event or explicit request. _And yes, it logs itself! (with recursion protection)_ 🤘
+Event logging for client applications on [Apple platforms](#supported-platforms) with support for offline work and automatic upload to [Google Cloud (GCP)](https://cloud.google.com). The package depends on [SwiftLog](https://github.com/apple/swift-log) - an official logging API for Swift, so it can be easly integrated into the project and combined with other logging backends. Log events are stored locally in the [JSON Lines](http://jsonlines.org) file format and bulk uploaded to GCP using the [Cloud Logging API v2](https://cloud.google.com/logging/docs/reference/v2/rest) at time intervals, upon defined event or explicit request.
+
+> And yes, it logs itself! (with recursion protection) 🤘
 
 ## Rationale
-Google recommended logging solution for client applications is Analytics framework, which is now part of the Firebase SDK. Here is a comparison of that framework and this library in terms of logging:
+Google-recommended logging solution for client applications is the Analytics framework, which is now part of the Firebase SDK. Here is a comparison of their framework and this library in terms of logging:
 Library | FirebaseAnalytics | GoogleCloudLogging
 --- | --- | ---
 Platform | Mobile only. _Even Catalyst is not currently supported._ | All modern Apple's OSs. _It is essential for development of universal SwiftUI apps._
@@ -19,7 +21,9 @@ Logging | Proprietary logging functions and implicit usage tracking. | SwiftLog 
 Open your application project in Xcode 11 or later, go to menu `File -> Swift Packages -> Add Package Dependency...` and paste the package repository URL `https://github.com/DnV1eX/GoogleCloudLogging.git`.
 
 ### Create Service Account
-In your web browser open the [Google Cloud Console](https://console.cloud.google.com) and create a new project. In `IAM & Admin -> Service Accounts` create a service account choosing `Logging -> Logs Writer` role. In the last step, create and download private key choosing `JSON` format. You need to include this file in your application bundle, just drag the file into the Xcode project and tick the desired targets in the file inspector.
+In your web browser, open the [Google Cloud Console](https://console.cloud.google.com) and create a new project. In `IAM & Admin -> Service Accounts` create a service account choosing `Logging -> Logs Writer` role. In the last step, create and download private key choosing `JSON` format. You need to include this file in your application bundle.
+
+> Just drag the file into the Xcode project and tick the desired targets in the file inspector.
 
 ### Setup Logging
 1. Import both `SwiftLog` and `GoogleCloudLogging` modules:
@@ -74,7 +78,7 @@ logger.error(/* Logged error message */, metadata: [LogKey.error: "\(error)"])
 > `GoogleCloudLogHandler.globalMetadata` takes precedence over `Logger` metadata which in turn takes precedence over log message metadata in case of key overlapping.
 
 ### Analyze Logs
-In your web browser open the [GCP Operations Logging](https://console.cloud.google.com/logs) and select your project. You will see a list of logs for a given **time range** which can be filtered by **log name** _(logger label)_, **severity** _(log level)_, **text payload** _(message)_, **labels** _(metadata)_ etc. **Resource type** for logs produced by GoogleCloudLogHandler is always _Global_.
+In your web browser, open the [GCP Operations Logging](https://console.cloud.google.com/logs) and select your project. You will see a list of logs for a given **time range** which can be filtered by **log name** _(logger label)_, **severity** _(log level)_, **text payload** _(message)_, **labels** _(metadata)_ etc. **Resource type** for logs produced by GoogleCloudLogHandler is always _Global_.
 
 > You can switch to the new Logs Viewer Preview that introduces new features, such as advanced log queries and histograms.
 
