@@ -6,6 +6,7 @@ Event logging for client applications on [Apple platforms](#supported-platforms)
 
 ## Rationale
 Google-recommended logging solution for client applications is the Analytics framework, which is now part of the Firebase SDK. Here is a comparison of their framework and this library in terms of logging:
+
 Library | FirebaseAnalytics | GoogleCloudLogging
 --- | --- | ---
 Platform | Mobile only. _Even Catalyst is not currently supported._ | All modern Apple's OSs. _It is essential for development of universal SwiftUI apps._
