@@ -256,7 +256,7 @@ public struct GoogleCloudLogHandler: LogHandler {
             if !replacedMetadata.isEmpty, file != #file || function != #function {
                 Self.logger.warning("Log metadata is replaced by logger metadata", metadata: [MetadataKey.replacedMetadata: .dictionary(replacedMetadata)])
             }
-            replacedMetadata = metadata.update(with: Self.globalMetadata)
+            replacedMetadata = replacedMetadata.update(with: Self.globalMetadata)
             if !replacedMetadata.isEmpty, file != #file || function != #function {
                 Self.logger.warning("Log metadata is replaced by global metadata", metadata: [MetadataKey.replacedMetadata: .dictionary(replacedMetadata)])
             }
